@@ -32,14 +32,26 @@ export async function GET(req: NextRequest) {
     if ((adminCol as any[]).length === 0) {
       await connection.execute("ALTER TABLE user ADD COLUMN admin TINYINT(1) DEFAULT 0");
     }
-    // 检查是否有admin账号
-    const [admins] = await connection.execute('SELECT id FROM user WHERE username = ? LIMIT 1', ['admin']);
-    if (Array.isArray(admins) && admins.length === 0) {
-      await connection.execute('INSERT INTO user (username, password, admin) VALUES (?, ?, 1)', ['admin', 'admin']);
-    }
+    // 不再自动插入admin账号
     const [rows] = await connection.execute('SELECT id, username, solved, admin FROM user ORDER BY id ASC');
     await connection.end();
     return NextResponse.json({ success: true, data: rows });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { username } = await req.json();
+    if (!username) {
+      return NextResponse.json({ success: false, message: '用户名不能为空' }, { status: 400 });
+    }
+    const connection = await mysql.createConnection(dbConfig);
+    await connection.execute(createUserTableSQL);
+    await connection.execute('DELETE FROM user WHERE username = ?', [username]);
+    await connection.end();
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
