@@ -18,7 +18,7 @@ const createProblemsTableSQL = `CREATE TABLE IF NOT EXISTS problems (
   description TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
 
-export async function GET(req: NextRequest, { params }: { params: Record<string, string> }) {
+export async function GET(req: NextRequest, { params }: any) {
   try {
     const { id } = params;
     const connection = await mysql.createConnection(dbConfig);
